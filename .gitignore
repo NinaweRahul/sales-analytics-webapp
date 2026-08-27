@@ -1,0 +1,16 @@
+# CSVs are large and not ours to redistribute — download instructions in database/README.md
+database/data/raw/*.csv
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Env
+.env
+.env.local
+
+# Node (for later frontend work)
+node_modules/
+dist/
