@@ -112,7 +112,12 @@ def load_file(engine, filename):
 
     print(f"Loading {filename} -> {table_name} ...")
 
-    df = pd.read_csv(filepath)
+    # encoding='utf-8-sig' strips a UTF-8 BOM if present (the Kaggle
+    # category translation file has one — without this, pandas reads
+    # the first column name as '\ufeffproduct_category_name' instead
+    # of 'product_category_name', which silently breaks the rename
+    # mapping and the downstream JOIN in the transform step).
+    df = pd.read_csv(filepath, encoding="utf-8-sig")
 
     if renames:
         df = df.rename(columns=renames)
