@@ -278,13 +278,14 @@ a:focus-visible {
   font-size: var(--text-sm);
   font-weight: 300;
   color: var(--color-ink);
-  transition: border-color 0.2s, background 0.2s;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
   font-family: var(--font-body);
 }
 
 .suggested-chip:hover {
   border-color: var(--color-accent);
   background: var(--color-accent-soft);
+  transform: translateX(2px);
 }
 
 /* ===== Results ===== */
@@ -294,7 +295,16 @@ a:focus-visible {
   border-radius: var(--radius);
   box-shadow: var(--shadow-card);
   overflow: hidden;
-  transition: background 0.3s, border-color 0.3s;
+  transition: background 0.3s, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.results-card:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .results-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .tab-bar {
@@ -319,6 +329,10 @@ a:focus-visible {
 .tab-button.active {
   color: var(--color-accent);
   border-bottom-color: var(--color-accent);
+}
+
+.tab-button:hover:not(.active) {
+  color: var(--color-ink);
 }
 
 .tab-panel {
@@ -480,6 +494,19 @@ a:focus-visible {
   width: 240px;
   box-shadow: var(--shadow-card);
   overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* No transform/scale here (unlike the other block hovers) -- these are
+   React Flow nodes with connector lines anchored to their edges, and
+   scaling would visually detach the connections from their handles. */
+.schema-node:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+[data-theme="dark"] .schema-node:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .schema-node-dim {
@@ -841,6 +868,20 @@ a:focus-visible {
   padding: 16px;
   box-shadow: var(--shadow-card);
   position: relative;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  cursor: default;
+}
+
+.step-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-accent);
+  z-index: 2;
+  position: relative;
+}
+
+[data-theme="dark"] .step-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .step-num {
