@@ -1,0 +1,887 @@
+/* ===== Design tokens — matched to portfolio (Fraunces/Outfit, green/gold) ===== */
+[data-theme="light"] {
+  --color-paper: #F4F6F2;
+  --color-paper-raised: #FFFFFF;
+  --color-ink: #111A0F;
+  --color-ink-muted: #7A9472;
+  --color-ink-mid: #2D4228;
+  --color-border: #D8E4D2;
+  --color-primary: #1A6B4A;
+  --color-primary-dark: #124d35;
+  --color-accent: #1A6B4A;
+  --color-accent-soft: #EAF3EE;
+  --color-error: #B3261E;
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.07);
+}
+
+[data-theme="dark"] {
+  --color-paper: #0E0E0E;
+  --color-paper-raised: #161616;
+  --color-ink: #F5F5F0;
+  --color-ink-muted: #A0A09A;
+  --color-ink-mid: #A0A09A;
+  --color-border: #242420;
+  --color-primary: #D4AF6A;
+  --color-primary-dark: #b8925019;
+  --color-accent: #D4AF6A;
+  --color-accent-soft: rgba(212, 175, 106, 0.1);
+  --color-error: #E5877E;
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+:root {
+  /* Type — same pairing as the portfolio: Fraunces for display, Outfit for
+     body. JetBrains Mono is added on top, used only for SQL and numeric
+     data — a functional choice (tabular alignment), not a style clash,
+     since the portfolio itself has no data tables. */
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --sidebar-width: 320px;
+  --radius: 6px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.3s, color 0.3s;
+}
+
+.mono, code, .numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin: 0;
+  color: var(--color-ink);
+  letter-spacing: -0.01em;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Layout ===== */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  background: var(--color-paper-raised);
+  border-right: 1px solid var(--color-border);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.main {
+  flex: 1;
+  padding: 32px 40px;
+  max-width: 960px;
+}
+
+/* Old sidebar-embedded brand block removed — brand now lives only in
+   TopBar (see .topbar-* below), rendered once at the app root. Having
+   it duplicated in the sidebar was the source of the overlapping
+   render reported earlier. */
+
+/* Theme toggle — same circular button pattern as the portfolio */
+.theme-toggle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-paper-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-card);
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--color-accent);
+  transform: scale(1.08);
+}
+
+/* ===== View switch (Ask / Explore Schema) — matches portfolio's pill-nav exactly */
+.view-switch {
+  display: flex;
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  padding: 0.35rem 0.5rem;
+  gap: 0.1rem;
+}
+
+.view-switch-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  border-radius: 100px;
+  font-family: var(--font-body);
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.view-switch-btn:hover {
+  color: var(--color-ink);
+  background: var(--color-border);
+}
+
+.view-switch-btn.active {
+  color: var(--color-ink);
+  background: var(--color-border);
+  font-weight: 700;
+}
+
+[data-theme="dark"] .view-switch-btn.active,
+[data-theme="dark"] .view-switch-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-ink);
+}
+
+/* ===== Ask panel ===== */
+.ask-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ask-textarea {
+  width: 100%;
+  min-height: 90px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-paper);
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 14px;
+  color: var(--color-ink);
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+
+.ask-textarea:focus {
+  border-color: var(--color-primary);
+}
+
+.ask-button {
+  background: var(--color-accent);
+  color: var(--color-paper-raised);
+  border: none;
+  border-radius: 4px;
+  padding: 0.9rem 2rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: opacity 0.2s;
+}
+
+[data-theme="dark"] .ask-button {
+  color: #0E0E0E;
+}
+
+.ask-button:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.ask-button:disabled {
+  background: var(--color-border);
+  color: var(--color-ink-muted);
+  cursor: not-allowed;
+}
+
+.suggested-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggested-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-ink-muted);
+  font-weight: 600;
+}
+
+.suggested-chip {
+  text-align: left;
+  background: var(--color-paper);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 9px 10px;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--color-ink);
+  transition: border-color 0.2s, background 0.2s;
+  font-family: var(--font-body);
+}
+
+.suggested-chip:hover {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+/* ===== Results ===== */
+.results-card {
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tab-button {
+  background: none;
+  border: none;
+  padding: 13px 18px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  font-family: var(--font-body);
+}
+
+.tab-button.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.tab-panel {
+  padding: 20px 24px;
+}
+
+.explanation-text {
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--color-ink);
+}
+
+.sql-panel {
+  background: var(--color-paper);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--color-ink);
+}
+
+.data-table-wrap {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-muted);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.data-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  color: var(--color-ink);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.row-count-note {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--color-ink-muted);
+  padding: 10px 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 90px;
+  align-items: center;
+  gap: 10px;
+}
+
+.bar-label {
+  font-size: 12px;
+  color: var(--color-ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-track {
+  background: var(--color-paper);
+  border-radius: 3px;
+  height: 18px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  background: var(--color-accent);
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.bar-value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: right;
+  color: var(--color-ink);
+}
+
+/* ===== States ===== */
+.status-message {
+  font-size: 13px;
+  font-weight: 300;
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  margin-top: 12px;
+}
+
+.status-message.loading {
+  background: var(--color-accent-soft);
+  color: var(--color-ink-mid);
+}
+
+.status-message.error {
+  background: rgba(179, 38, 30, 0.08);
+  color: var(--color-error);
+}
+
+.empty-state {
+  color: var(--color-ink-muted);
+  font-weight: 300;
+  font-size: 14px;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+/* ===== Schema explorer ===== */
+.schema-explorer-note {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--color-ink-muted);
+  margin-bottom: 16px;
+  max-width: 640px;
+  line-height: 1.6;
+}
+
+.schema-flow-wrap {
+  height: 640px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-paper-raised);
+  overflow: hidden;
+}
+
+.schema-node {
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  width: 240px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.schema-node-dim {
+  border-top: 3px solid var(--color-ink-muted);
+}
+
+.schema-node-fact {
+  border-top: 3px solid var(--color-accent);
+}
+
+.schema-node-header {
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.schema-node-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.schema-node-grain {
+  font-size: 10px;
+  font-weight: 300;
+  color: var(--color-ink-muted);
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--color-border);
+  line-height: 1.4;
+}
+
+.schema-node-columns {
+  padding: 4px 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.schema-node-column {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 12px;
+  font-size: 11px;
+}
+
+.col-name {
+  color: var(--color-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.col-type {
+  color: var(--color-ink-muted);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+/* ===== Eyebrow label — same pattern as portfolio's .hero-eyebrow ===== */
+.eyebrow {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 24px;
+  height: 1px;
+  background: var(--color-accent);
+}
+
+.main-headline {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+
+.main-headline em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--color-accent);
+}
+
+/* ===== Onboarding steps — same numbered pattern as the RAG tool
+   (Upload/Ask/Verify), reused here because this is also a genuine
+   3-step sequence: Ask -> Generate SQL -> Verify the answer. ===== */
+.onboarding-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 480px;
+  margin-top: 8px;
+}
+
+.onboarding-step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.onboarding-step-num {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: var(--color-accent);
+  flex-shrink: 0;
+  width: 28px;
+}
+
+.onboarding-step-title {
+  font-weight: 500;
+  color: var(--color-ink);
+  margin-bottom: 2px;
+}
+
+.onboarding-step-desc {
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+
+/* ===== TopBar — always rendered, once, at the app root ===== */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-paper-raised);
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+}
+
+.topbar-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  background: var(--color-accent);
+  color: var(--color-paper-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .topbar-icon {
+  color: #0E0E0E;
+}
+
+.topbar-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.topbar-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 17px;
+  color: var(--color-ink);
+}
+
+.topbar-subtitle {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.topbar-link {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.topbar-link:hover {
+  color: var(--color-accent);
+}
+
+/* ===== App root layout ===== */
+.app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ===== Landing (pre-question) view ===== */
+.landing-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 24px 40px;
+  text-align: center;
+}
+
+.landing-eyebrow {
+  justify-content: center;
+}
+
+.landing-headline {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.1rem, 4.2vw, 2.9rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.landing-headline em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--color-accent);
+}
+
+.landing-subtext {
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--color-ink-mid);
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 100px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--color-ink-mid);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.landing-ask-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--color-paper-raised);
+  border: 1.5px dashed var(--color-border);
+  border-radius: 10px;
+  padding: 28px;
+  max-width: 600px;
+  margin: 0 auto;
+  transition: border-color 0.2s;
+}
+
+.landing-ask-card:focus-within {
+  border-color: var(--color-accent);
+}
+
+.landing-textarea {
+  width: 100%;
+  min-height: 70px;
+  border: none;
+  background: none;
+  resize: none;
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-size: 16px;
+  color: var(--color-ink);
+  text-align: center;
+}
+
+.landing-textarea:focus {
+  outline: none;
+}
+
+.landing-ask-card .ask-button {
+  align-self: center;
+}
+
+.landing-schema-link {
+  display: inline-block;
+  margin-top: 18px;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 300;
+  color: var(--color-ink-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s;
+}
+
+.landing-schema-link:hover {
+  color: var(--color-accent);
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 36px;
+  text-align: left;
+}
+
+@media (max-width: 700px) {
+  .steps-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.step-card {
+  background: var(--color-paper-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+}
+
+.step-num {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-ink-muted);
+}
+
+.step-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.step-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.step-desc {
+  font-size: 12.5px;
+  font-weight: 300;
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+
+/* ===== Workspace (post-question) layout ===== */
+.workspace-shell {
+  display: flex;
+  flex: 1;
+}
+
+.workspace-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  background: var(--color-paper-raised);
+  border-right: 1px solid var(--color-border);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.workspace-main {
+  flex: 1;
+  padding: 32px 40px;
+  max-width: 960px;
+}

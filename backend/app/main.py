@@ -24,8 +24,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
+from google.genai.errors import APIError
 
 from query_generator import QueryGenerator, QueryGenerationError
+from schema_context import get_schema_dict
 
 app = FastAPI(
     title="Sales Analytics API",
@@ -37,7 +39,10 @@ app = FastAPI(
 # specific origin before deploying anywhere public.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:5173", "http://127.0.0.1:5173",
+        "http://localhost:3000", "http://127.0.0.1:3000",
+    ],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
@@ -105,6 +110,12 @@ def health_check():
     return checks
 
 
+@app.get("/schema")
+def get_schema():
+    """Table/column/relationship metadata for the frontend's schema explorer."""
+    return get_schema_dict()
+
+
 @app.post("/ask", response_model=AskResponse)
 def ask(request: AskRequest):
     question = request.question.strip()
@@ -119,6 +130,15 @@ def ask(request: AskRequest):
         # This is a "the LLM couldn't produce valid SQL" failure, not a
         # server error -- 422 (Unprocessable Entity) fits better than 500.
         raise HTTPException(status_code=422, detail=str(e))
+    except APIError as e:
+        # Gemini itself is unavailable/overloaded and stayed that way through
+        # all of query_generator's internal retries. Genuinely not something
+        # our code can fix -- surface it as a clean 503 instead of crashing
+        # with a raw traceback, and let the user know it's worth retrying.
+        raise HTTPException(
+            status_code=503,
+            detail="The AI service is temporarily overloaded. Please try again in a moment.",
+        )
 
     try:
         engine = get_engine()

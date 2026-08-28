@@ -11,7 +11,7 @@ means the prompt, the validator, and the schema-explorer API can never
 drift out of sync with each other.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 
 
 @dataclass
@@ -140,14 +140,41 @@ SCHEMA: list[Table] = [
 ]
 
 
-RELATIONSHIPS = """
+RELATIONSHIPS_TEXT = """
 analytics.fact_order_items.customer_id           -> analytics.dim_customers.customer_id
 analytics.fact_order_items.product_id            -> analytics.dim_products.product_id
 analytics.fact_order_items.seller_id             -> analytics.dim_sellers.seller_id
 analytics.fact_order_items.order_purchase_date_id -> analytics.dim_date.date_id
-analytics.fact_payments.order_id                 -> analytics.fact_order_items.order_id (via orders, not a direct FK)
-analytics.fact_reviews.order_id                  -> analytics.fact_order_items.order_id (via orders, not a direct FK)
+analytics.fact_payments.order_id                 -> analytics.fact_order_items.order_id (shared value, NOT an enforced FK)
+analytics.fact_reviews.order_id                  -> analytics.fact_order_items.order_id (shared value, NOT an enforced FK)
 """
+
+
+@dataclass
+class Relationship:
+    from_table: str
+    from_column: str
+    to_table: str
+    to_column: str
+    kind: str  # "foreign_key" (enforced in Postgres) or "logical" (shared value, no constraint)
+    note: str = ""
+
+
+RELATIONSHIPS: list[Relationship] = [
+    Relationship("analytics.fact_order_items", "customer_id", "analytics.dim_customers", "customer_id", "foreign_key"),
+    Relationship("analytics.fact_order_items", "product_id", "analytics.dim_products", "product_id", "foreign_key"),
+    Relationship("analytics.fact_order_items", "seller_id", "analytics.dim_sellers", "seller_id", "foreign_key"),
+    Relationship("analytics.fact_order_items", "order_purchase_date_id", "analytics.dim_date", "date_id", "foreign_key"),
+    Relationship(
+        "analytics.fact_payments", "order_id", "analytics.fact_order_items", "order_id", "logical",
+        note="Shared order_id value, not a database-enforced foreign key (fact_payments and "
+             "fact_order_items are at different grains -- see schema notes).",
+    ),
+    Relationship(
+        "analytics.fact_reviews", "order_id", "analytics.fact_order_items", "order_id", "logical",
+        note="Shared order_id value, not a database-enforced foreign key.",
+    ),
+]
 
 
 def render_schema_for_prompt() -> str:
@@ -164,9 +191,18 @@ def render_schema_for_prompt() -> str:
             lines.append(f"NOTES: {table.notes}")
 
     lines.append("\nRELATIONSHIPS (for JOINs):")
-    lines.append(RELATIONSHIPS)
+    lines.append(RELATIONSHIPS_TEXT)
 
     return "\n".join(lines)
+
+
+def get_schema_dict() -> dict:
+    """JSON-serializable schema description, for the /schema API endpoint
+    that feeds the frontend's schema explorer diagram."""
+    return {
+        "tables": [asdict(t) for t in SCHEMA],
+        "relationships": [asdict(r) for r in RELATIONSHIPS],
+    }
 
 
 def get_all_table_names() -> set[str]:
