@@ -6,6 +6,8 @@ import ResultsTabs from './components/ResultsTabs'
 import SchemaExplorer from './components/SchemaExplorer'
 import { askQuestion } from './api'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+
 function getInitialTheme() {
   const saved = localStorage.getItem('theme')
   if (saved) return saved
@@ -20,11 +22,22 @@ export default function App() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  // 'waking' | 'ready' | 'error' -- Render's free tier spins down when idle,
+  // so the first request after a while can take 30-60s. Pinging /health on
+  // mount wakes it up in the background before the user asks anything, and
+  // the landing page's status pill reflects this so the wait isn't silent.
+  const [serverStatus, setServerStatus] = useState('waking')
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    fetch(`${API_BASE}/health`)
+      .then((res) => setServerStatus(res.ok ? 'ready' : 'error'))
+      .catch(() => setServerStatus('error'))
+  }, [])
 
   function toggleTheme() {
     setTheme((t) => (t === 'light' ? 'dark' : 'light'))
@@ -71,6 +84,7 @@ export default function App() {
           onSubmit={handleAsk}
           loading={loading}
           onExploreSchema={handleExploreSchema}
+          serverStatus={serverStatus}
         />
       )}
 

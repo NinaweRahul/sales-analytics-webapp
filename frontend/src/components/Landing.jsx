@@ -28,11 +28,18 @@ const STEPS = [
   },
 ]
 
-export default function Landing({ question, setQuestion, onSubmit, loading, onExploreSchema }) {
+export default function Landing({ question, setQuestion, onSubmit, loading, onExploreSchema, serverStatus }) {
   function handleSubmit(e) {
     e.preventDefault()
     if (question.trim() && !loading) onSubmit(question.trim())
   }
+
+  const statusText =
+    serverStatus === 'waking'
+      ? 'Starting up, just a moment…'
+      : serverStatus === 'error'
+      ? "Having trouble reaching the server — try refreshing"
+      : '113,000 real orders, ready to query'
 
   return (
     <div className="landing-container">
@@ -47,8 +54,8 @@ export default function Landing({ question, setQuestion, onSubmit, loading, onEx
       </p>
 
       <div className="status-pill">
-        <span className="status-dot" />
-        113,000 real orders, ready to query
+        <span className={`status-dot ${serverStatus === 'waking' ? 'status-dot-pulse' : ''}`} />
+        {statusText}
       </div>
 
       <form className="landing-ask-card" onSubmit={handleSubmit}>
