@@ -19,7 +19,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=Path(__file__).parent.parent.parent / ".env")
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
@@ -28,6 +28,7 @@ from google.genai.errors import APIError
 
 from query_generator import QueryGenerator, QueryGenerationError
 from schema_context import get_schema_dict
+from rate_limiter import RateLimiter
 
 app = FastAPI(
     title="Sales Analytics API",
@@ -35,8 +36,6 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Allow the frontend dev server to call this API. Tighten this to a
-# specific origin before deploying anywhere public.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -48,13 +47,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Shared, module-level instances -----------------------------------
-# Created ONCE at startup, not per-request. This matters specifically
-# for QueryGenerator: it tracks rate-limit timing as instance state, so
-# a new instance per request would silently defeat the rate limiting
-# that keeps us under the Gemini free-tier quota.
 _generator: QueryGenerator | None = None
 _readonly_engine = None
+
+# 10 questions per 5 minutes per visitor. Generous enough for genuine
+# exploration of the demo, tight enough that one visitor can't burn the
+# whole shared Gemini quota (5 requests/minute on the free tier, per the
+# GEMINI_MODEL currently in use) for everyone else.
+ask_limiter = RateLimiter(max_requests=10, window_seconds=300)
 
 
 def get_generator() -> QueryGenerator:
@@ -74,8 +74,6 @@ def get_engine():
     return _readonly_engine
 
 
-# --- Request / response schemas ----------------------------------------
-
 class AskRequest(BaseModel):
     question: str
 
@@ -89,8 +87,6 @@ class AskResponse(BaseModel):
     row_count: int
     generation_attempts: int
 
-
-# --- Endpoints -----------------------------------------------------------
 
 @app.get("/health")
 def health_check():
@@ -118,7 +114,16 @@ def get_schema():
 
 
 @app.post("/ask", response_model=AskResponse)
-def ask(request: AskRequest):
+def ask(request: AskRequest, http_request: Request):
+    client_id = ask_limiter.get_client_id(http_request)
+    allowed, retry_after = ask_limiter.check(client_id)
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit reached. Try again in {retry_after} seconds.",
+            headers={"Retry-After": str(retry_after)},
+        )
+
     question = request.question.strip()
     if not question:
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
@@ -128,14 +133,8 @@ def ask(request: AskRequest):
     try:
         result = generator.generate_sql(question)
     except QueryGenerationError as e:
-        # This is a "the LLM couldn't produce valid SQL" failure, not a
-        # server error -- 422 (Unprocessable Entity) fits better than 500.
         raise HTTPException(status_code=422, detail=str(e))
     except APIError as e:
-        # Gemini itself is unavailable/overloaded and stayed that way through
-        # all of query_generator's internal retries. Genuinely not something
-        # our code can fix -- surface it as a clean 503 instead of crashing
-        # with a raw traceback, and let the user know it's worth retrying.
         raise HTTPException(
             status_code=503,
             detail="The AI service is temporarily overloaded. Please try again in a moment.",
@@ -148,8 +147,6 @@ def ask(request: AskRequest):
             columns = list(cursor_result.keys())
             rows = [list(row) for row in cursor_result.fetchall()]
     except SQLAlchemyError as e:
-        # The SQL passed validation but failed at execution (e.g. a
-        # semantic issue sqlglot's structural checks can't catch).
         raise HTTPException(
             status_code=500,
             detail=f"Query validated but failed to execute: {e}",
