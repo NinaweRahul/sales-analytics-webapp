@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import TopBar from './components/TopBar'
 import Landing from './components/Landing'
 import AskPanel from './components/AskPanel'
-import ResultsTabs from './components/ResultsTabs'
+import ConversationTurn from './components/ConversationTurn'
 import SchemaExplorer from './components/SchemaExplorer'
 import { askQuestion } from './api'
 
@@ -14,19 +14,16 @@ function getInitialTheme() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
+let nextTurnId = 1
+
 export default function App() {
   const [theme, setTheme] = useState(getInitialTheme)
-  const [mode, setMode] = useState('landing') // 'landing' | 'workspace'
-  const [view, setView] = useState('ask') // 'ask' | 'schema' (only relevant in workspace)
+  const [mode, setMode] = useState('landing')
+  const [view, setView] = useState('ask')
   const [question, setQuestion] = useState('')
-  const [result, setResult] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  // 'waking' | 'ready' | 'error' -- Render's free tier spins down when idle,
-  // so the first request after a while can take 30-60s. Pinging /health on
-  // mount wakes it up in the background before the user asks anything, and
-  // the landing page's status pill reflects this so the wait isn't silent.
+  const [history, setHistory] = useState([])
   const [serverStatus, setServerStatus] = useState('waking')
+  const bottomRef = useRef(null)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -39,6 +36,10 @@ export default function App() {
       .catch(() => setServerStatus('error'))
   }, [])
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [history])
+
   function toggleTheme() {
     setTheme((t) => (t === 'light' ? 'dark' : 'light'))
   }
@@ -47,24 +48,26 @@ export default function App() {
     setMode('landing')
     setView('ask')
     setQuestion('')
-    setResult(null)
-    setError(null)
+    setHistory([])
   }
 
   async function handleAsk(q) {
     setMode('workspace')
     setView('ask')
-    setQuestion(q)
-    setLoading(true)
-    setError(null)
+    setQuestion('')
+
+    const turnId = nextTurnId++
+    setHistory((prev) => [...prev, { id: turnId, question: q, status: 'loading' }])
+
     try {
       const data = await askQuestion(q)
-      setResult(data)
+      setHistory((prev) =>
+        prev.map((t) => (t.id === turnId ? { ...t, status: 'done', result: data } : t))
+      )
     } catch (err) {
-      setError(err.message)
-      setResult(null)
-    } finally {
-      setLoading(false)
+      setHistory((prev) =>
+        prev.map((t) => (t.id === turnId ? { ...t, status: 'error', error: err.message } : t))
+      )
     }
   }
 
@@ -72,6 +75,8 @@ export default function App() {
     setMode('workspace')
     setView('schema')
   }
+
+  const isLoading = history.some((t) => t.status === 'loading')
 
   return (
     <div className="app-root">
@@ -82,7 +87,7 @@ export default function App() {
           question={question}
           setQuestion={setQuestion}
           onSubmit={handleAsk}
-          loading={loading}
+          loading={isLoading}
           onExploreSchema={handleExploreSchema}
           serverStatus={serverStatus}
         />
@@ -111,7 +116,7 @@ export default function App() {
                 question={question}
                 setQuestion={setQuestion}
                 onSubmit={handleAsk}
-                loading={loading}
+                loading={isLoading}
               />
             )}
           </div>
@@ -119,24 +124,20 @@ export default function App() {
           <div className="workspace-main">
             {view === 'ask' && (
               <>
-                <h1 style={{ marginBottom: 20 }}>{result ? result.question : question}</h1>
-
-                {loading && (
-                  <div className="status-message loading">
-                    Generating SQL and running the analysis — this can take a few seconds…
-                  </div>
+                {history.length === 0 && (
+                  <div className="empty-state">Ask something to get started.</div>
                 )}
-
-                {error && <div className="status-message error">{error}</div>}
-
-                {result && !loading && <ResultsTabs result={result} />}
+                {history.map((turn) => (
+                  <ConversationTurn key={turn.id} turn={turn} />
+                ))}
+                <div ref={bottomRef} />
               </>
             )}
 
             {view === 'schema' && (
               <>
                 <p className="eyebrow">Star Schema · Olist E-Commerce</p>
-                <h1 style={{ marginBottom: 20 }}>Explore the database</h1>
+                <h2 className="section-heading">Explore the database</h2>
                 <SchemaExplorer />
               </>
             )}

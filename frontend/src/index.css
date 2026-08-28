@@ -38,6 +38,21 @@
   --font-body: 'Outfit', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
+  /* Unified type scale for all UI text (labels, buttons, body copy, etc).
+     Distinct display sizes (hero headlines, section headings, the
+     turn-question heading) intentionally sit OUTSIDE this scale, since
+     they're meant to stand out -- everything here is the small-to-medium
+     text that previously drifted into near-duplicate ad-hoc values
+     (0.68rem vs 0.7rem vs 0.72rem, 12px vs 12.5px, etc) across different
+     rounds of styling. */
+  --text-2xs: 0.6875rem;  /* 11px */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.8125rem;   /* 13px */
+  --text-base: 0.875rem;  /* 14px */
+  --text-md: 0.9375rem;   /* 15px */
+  --text-lg: 1rem;        /* 16px */
+  --text-xl: 1.0625rem;   /* 17px */
+
   --sidebar-width: 320px;
   --radius: 6px;
 }
@@ -56,7 +71,7 @@ body {
   color: var(--color-ink);
   font-family: var(--font-body);
   font-weight: 300;
-  font-size: 15px;
+  font-size: var(--text-md);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   transition: background 0.3s, color 0.3s;
@@ -133,7 +148,7 @@ a:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: var(--text-lg);
   flex-shrink: 0;
   box-shadow: var(--shadow-card);
   transition: border-color 0.2s, transform 0.2s;
@@ -159,7 +174,7 @@ a:focus-visible {
   background: none;
   border: none;
   padding: 0.5rem 1.1rem;
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -203,7 +218,7 @@ a:focus-visible {
   background: var(--color-paper);
   font-family: var(--font-body);
   font-weight: 300;
-  font-size: 14px;
+  font-size: var(--text-base);
   color: var(--color-ink);
   resize: vertical;
   transition: border-color 0.2s;
@@ -219,7 +234,7 @@ a:focus-visible {
   border: none;
   border-radius: 4px;
   padding: 0.9rem 2rem;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -247,7 +262,7 @@ a:focus-visible {
 }
 
 .suggested-label {
-  font-size: 0.68rem;
+  font-size: var(--text-2xs);
   text-transform: uppercase;
   letter-spacing: 0.15em;
   color: var(--color-ink-muted);
@@ -260,7 +275,7 @@ a:focus-visible {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 9px 10px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 300;
   color: var(--color-ink);
   transition: border-color 0.2s, background 0.2s;
@@ -291,7 +306,7 @@ a:focus-visible {
   background: none;
   border: none;
   padding: 13px 18px;
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -311,7 +326,7 @@ a:focus-visible {
 }
 
 .explanation-text {
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 300;
   line-height: 1.7;
   color: var(--color-ink);
@@ -324,7 +339,7 @@ a:focus-visible {
   border-radius: var(--radius);
   padding: 16px;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-sm);
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
@@ -338,13 +353,13 @@ a:focus-visible {
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: var(--text-sm);
 }
 
 .data-table th {
   text-align: left;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--color-ink-muted);
@@ -364,7 +379,7 @@ a:focus-visible {
 }
 
 .row-count-note {
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 300;
   color: var(--color-ink-muted);
   padding: 10px 24px;
@@ -385,7 +400,7 @@ a:focus-visible {
 }
 
 .bar-label {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--color-ink-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -408,14 +423,14 @@ a:focus-visible {
 
 .bar-value {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-xs);
   text-align: right;
   color: var(--color-ink);
 }
 
 /* ===== States ===== */
 .status-message {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 300;
   padding: 12px 16px;
   border-radius: var(--radius);
@@ -435,14 +450,14 @@ a:focus-visible {
 .empty-state {
   color: var(--color-ink-muted);
   font-weight: 300;
-  font-size: 14px;
+  font-size: var(--text-base);
   padding: 40px 24px;
   text-align: center;
 }
 
 /* ===== Schema explorer ===== */
 .schema-explorer-note {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 300;
   color: var(--color-ink-muted);
   margin-bottom: 16px;
@@ -478,7 +493,7 @@ a:focus-visible {
 .schema-node-header {
   padding: 10px 12px;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-ink);
   border-bottom: 1px solid var(--color-border);
@@ -488,7 +503,7 @@ a:focus-visible {
 }
 
 .schema-node-badge {
-  font-size: 9px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   padding: 2px 8px;
@@ -498,7 +513,7 @@ a:focus-visible {
 }
 
 .schema-node-grain {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 300;
   color: var(--color-ink-muted);
   padding: 6px 12px;
@@ -517,7 +532,7 @@ a:focus-visible {
   justify-content: space-between;
   gap: 8px;
   padding: 4px 12px;
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .col-name {
@@ -529,13 +544,13 @@ a:focus-visible {
 
 .col-type {
   color: var(--color-ink-muted);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   flex-shrink: 0;
 }
 
 /* ===== Eyebrow label — same pattern as portfolio's .hero-eyebrow ===== */
 .eyebrow {
-  font-size: 0.68rem;
+  font-size: var(--text-2xs);
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -601,7 +616,7 @@ a:focus-visible {
 }
 
 .onboarding-step-desc {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 300;
   color: var(--color-ink-muted);
   line-height: 1.5;
@@ -652,12 +667,12 @@ a:focus-visible {
 .topbar-title {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 17px;
+  font-size: var(--text-xl);
   color: var(--color-ink);
 }
 
 .topbar-subtitle {
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -671,7 +686,7 @@ a:focus-visible {
 }
 
 .topbar-link {
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -719,7 +734,7 @@ a:focus-visible {
 }
 
 .landing-subtext {
-  font-size: 15px;
+  font-size: var(--text-md);
   font-weight: 300;
   color: var(--color-ink-mid);
   line-height: 1.6;
@@ -734,7 +749,7 @@ a:focus-visible {
   border: 1px solid var(--color-border);
   border-radius: 100px;
   padding: 8px 18px;
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 300;
   color: var(--color-ink-mid);
   box-shadow: var(--shadow-card);
@@ -774,7 +789,7 @@ a:focus-visible {
   resize: none;
   font-family: var(--font-body);
   font-weight: 300;
-  font-size: 16px;
+  font-size: var(--text-lg);
   color: var(--color-ink);
   text-align: center;
 }
@@ -793,7 +808,7 @@ a:focus-visible {
   background: none;
   border: none;
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 300;
   color: var(--color-ink-muted);
   text-decoration: underline;
@@ -833,7 +848,7 @@ a:focus-visible {
   top: 16px;
   right: 18px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   color: var(--color-ink-muted);
 }
 
@@ -852,12 +867,12 @@ a:focus-visible {
 .step-title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--text-md);
   margin-bottom: 6px;
 }
 
 .step-desc {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   font-weight: 300;
   color: var(--color-ink-muted);
   line-height: 1.5;
@@ -894,4 +909,38 @@ a:focus-visible {
 @keyframes status-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
+}
+
+/* ===== Conversation history (stacked question/answer blocks) ===== */
+.turn-block {
+  margin-bottom: 32px;
+}
+
+/* Divider between blocks, except before the very first one -- this is
+   the actual visual separation the chat-thread request was about. */
+.turn-block:not(:first-child) {
+  padding-top: 28px;
+  border-top: 1px solid var(--color-border);
+}
+
+.turn-question {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.3rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  margin-bottom: 16px;
+}
+
+/* Generic secondary section heading (e.g. "Explore the database") --
+   explicit size so it never falls back to the browser's oversized
+   default h1/h2 styling, which was the original font-inconsistency bug. */
+.section-heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+  margin-bottom: 20px;
+  color: var(--color-ink);
 }
