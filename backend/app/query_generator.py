@@ -7,6 +7,7 @@ returning it, and retries once with error feedback if validation fails.
 import json
 import os
 import time
+import threading
 
 from google import genai
 from google.genai.errors import ServerError
@@ -127,6 +128,7 @@ class QueryGenerator:
             os.getenv("GEMINI_MIN_DELAY_SECONDS", "13")
         )
         self._last_request_time = 0.0
+        self._rate_limit_lock = threading.Lock()
 
         self._system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
             schema=render_schema_for_prompt(),
@@ -134,10 +136,15 @@ class QueryGenerator:
         )
 
     def _wait_for_rate_limit(self):
-        elapsed = time.time() - self._last_request_time
-        if elapsed < self.min_delay:
-            time.sleep(self.min_delay - elapsed)
-        self._last_request_time = time.time()
+        # Lock ensures two near-simultaneous requests (FastAPI runs sync
+        # endpoints in a thread pool) can't both read the old timestamp
+        # before either updates it, which would let both slip through
+        # under the spacing requirement.
+        with self._rate_limit_lock:
+            elapsed = time.time() - self._last_request_time
+            if elapsed < self.min_delay:
+                time.sleep(self.min_delay - elapsed)
+            self._last_request_time = time.time()
 
     def _call_llm(self, question: str, error_context: str | None = None) -> dict:
         prompt = self._system_prompt + f"\n\nUser question: {question}\n"
